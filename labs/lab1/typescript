@@ -1,0 +1,74 @@
+Script started on Sun 13 Jan 2019 09:38:36 PM EST
+]0;fowler_l@cobra:~/CSC310/labs/lab1[?1034h[fowler_l@cobra lab1]$ vim tail.cpp 
+[?1049h[?1h=[2;1H▽[6n[2;1H  [1;1H[1;34r[?12;25h[?12l[?25h[27m[m[H[2J[?25l[34;1H"tail.cpp" 58L, 1312C[>c[1;1H[35m#include [m[31m<iostream>[m
+[35m#include [m[31m<string>[m
+[35m#include [m[31m<fstream>[m
+[33musing[m [32mnamespace[m std;
+[34m//program to print -n lines from the bottom of the file[m
+
+[32mint[m main([32mint[m argc, [32mchar[m* argv[]){[9;5H[34m//declare variables[m
+    string lines;
+    [32mint[m num_lines, length;
+    string file;
+    [32mchar[m ch;
+    [32mint[m stop = [31m0[m;[16;5H[34m//read in number of lines and remove - 
+[m    [34m//then convert to an int[m
+    lines = argv[[31m1[m];
+    num_lines = stoi(lines.substr([31m1[m));[21;5H[34m//without this it will print 1 line[m
+    [33mif[m(num_lines == [31m0[m){[23;9H[33mreturn[m [31m0[m;
+    }[26;5H[34m//get file arguement and open the file[m
+    file = argv[[31m2[m];
+    fstream infile(file.c_str(), ios::in);[30;5H[34m//get beginning pointer[m
+    infile.seekg([31m0[m, ios::beg);
+    [32mlong[m start_ptr = infile.tellg();[34;137H22,5[10CTop[22;5H[?12l[?25h[?25l[34;1H[K[34;1H:[?12l[?25hw[?25l[?12l[?25hq[?25l[?12l[?25h[?25l"tail.cpp" 58L, 1312C written
+[?1l>[?12l[?25h[?1049l]0;fowler_l@cobra:~/CSC310/labs/lab1[fowler_l@cobra lab1]$ vim wc.cpp 
+[?1049h[?1h=[2;1H▽[6n[2;1H  [1;1H[1;34r[?12;25h[?12l[?25h[27m[m[H[2J[?25l[34;1H"wc.cpp" 95L, 1957C[>c[1;1H[35m#include [m[31m<iostream>[m
+[35m#include [m[31m<fstream>[m
+[35m#include [m[31m<string>[m
+[35m#include [m[31m<sstream>[m
+[33musing[m [32mnamespace[m std;
+[34m//program to simulate the wc command
+
+//prototypes[m
+string read_file_into_string(string filename);
+
+[32mint[m main([32mint[m argc, [32mchar[m* argv[]){
+    [34m//get file name and open[m
+    string file = argv[argc-[31m1[m];
+    fstream infile(file.c_str(), ios::in);
+    string arg;
+    [34m//put file into string[m
+    string total = read_file_into_string(file);[19;5H[32mbool[m c_flag = [31m0[m;
+    [32mbool[m l_flag = [31m0[m;
+    [32mbool[m w_flag = [31m0[m;[23;5H[34m//turn on flags[m
+    [33mfor[m([32mint[m i=[31m1[m; i<argc; i++){[25;9Harg = argv[i];[26;9H[33mif[m(arg == [31m"-c"[m){[27;13Hc_flag = [31m1[m;[28;9H}[29;9H[33mif[m(arg == [31m"-l"[m){[30;13Hl_flag = [31m1[m;[31;9H}[32;9H[33mif[m(arg == [31m"-w"[m){[33;13Hw_flag = [31m1[m;[34;137H1,1[11CTop[1;1H[?12l[?25h[?25l[34;1H[K[34;1H:[?12l[?25hw[?25l[?12l[?25hq[?25l[?12l[?25h[?25l"wc.cpp" 95L, 1957C written
+[?1l>[?12l[?25h[?1049l]0;fowler_l@cobra:~/CSC310/labs/lab1[fowler_l@cobra lab1]$ vim base.cpp 
+[?1049h[?1h=[2;1H▽[6n[2;1H  [1;1H[1;34r[?12;25h[?12l[?25h[27m[m[H[2J[?25l[34;1H"base.cpp" 45L, 865C[>c[1;1H[35m#include [m[31m<iostream>[m
+[33musing[m [32mnamespace[m std;
+
+[32mclass[m Base
+{
+    [33mpublic[m :[7;9H[32mvirtual[m [32mvoid[m iam(); [34m//virtual lets derived classes override function[m
+};
+
+[32mvoid[m Base::iam() [34m//member function of base[m
+{[12;11Hcout << [31m"base"[m << endl;
+}
+
+[32mclass[m One : [33mpublic[m Base [34m//derived class of Base[m
+{
+    [33mpublic[m :[18;9H[32mvoid[m iam() { cout << [31m"one"[m << endl; }[19;9H[32mvoid[m iam2() {   Base::iam();  }
+};
+
+[32mclass[m Two: [33mpublic[m Base{ [34m//derived class of base[m
+    [33mpublic[m:[24;9H[32mvoid[m iam() {cout << [31m"two"[m << endl;}[25;9H[32mvoid[m iam2() { Base::iam();}
+
+};
+
+[32mint[m main()
+{
+    Base b;  cout << [31m"Calling b.iam() "[m; b.iam();[33;5HOne derived1;[34;137H7,3-9[9CTop[7;9H[?12l[?25h[?25l[34;1H[K[34;1H:[?12l[?25hw[?25l[?12l[?25hq[?25l[?12l[?25h[?25l"base.cpp" 45L, 865C written
+[?1l>[?12l[?25h[?1049l]0;fowler_l@cobra:~/CSC310/labs/lab1[fowler_l@cobra lab1]$ exit[K[K[K[Kexit
+exit
+
+Script done on Sun 13 Jan 2019 09:39:23 PM EST
