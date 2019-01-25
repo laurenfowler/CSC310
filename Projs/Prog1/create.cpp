@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstdlib>
+#include <iomanip>
 using namespace std;
 
 typedef char String[25];
@@ -12,7 +14,22 @@ struct BookRec{
     int onhand;
     float price;
     String type;
-}; 
+};
+
+//prototypes
+void writeRecord(struct BookRec buf);
+
+//writes record to the screen
+void writeRecord(struct BookRec buf){
+
+    	  cout<<setw(10)<<setfill('0')<<buf.isbn
+	      <<setw(25)<<setfill(' ')<<buf.name
+	      <<setw(25)<<buf.author
+	      <<setw(3)<<buf.onhand
+	      <<setw(6)<<buf.price
+	      <<setw(10)<<buf.type<<endl;
+
+}
 
 int main(int argc, char *argv[]){
 
@@ -50,16 +67,19 @@ int main(int argc, char *argv[]){
         // will only print out first error that makes input invalid
 
         if(buffer.onhand < 0 && write){
-            cerr << "Negative amount onhand on line " << lines << "of data file -- record ignored" << endl;
+            cerr << "Negative amount onhand on line " << lines << " of data file -- record ignored" << endl;
+            writeRecord(buffer);
             write = 0;
         }
 
         if(buffer.price < 0 && write){
             cerr << "Negative price on line " << lines << " of data file -- record ignored" << endl;
+            writeRecord(buffer);
         }   
 
         if(check_isbn <= prev_isbn && write){
             cerr << "ISBN number out of sequence on line " << lines << " of data file" << endl;
+            writeRecord(buffer);
         }
         else if(write){
             //sets the current isbn to the previous isbn
@@ -75,6 +95,17 @@ int main(int argc, char *argv[]){
         write = 1;
 
     }
+    outfile.close(); //closes the file, needed to be able to open file again  
+
+    //create space
+    cout << endl; 
+    
+    fstream in("library.out", ios::in | ios::binary);
+    
+    while(in.read((char *) &buffer, sizeof(BookRec))){
+        writeRecord(buffer);
+    }   
+
 
     return 0;
 } 
