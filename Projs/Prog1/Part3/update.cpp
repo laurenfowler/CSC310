@@ -3,11 +3,13 @@
 #include <fstream>
 #include <string>
 #include <map>
+#include <iterator>
 using namespace std;
 
 //prototypes
 map <int, int> read_master(fstream& file);
-void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <int, int> books);
+void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <int, int>& books);
+bool isbn_exist(unsigned int isbn, map<int, int>& books);
 
 typedef char String[25];
 struct BookRec{
@@ -73,18 +75,45 @@ map <int, int> read_master(fstream& file){
 }
 
 //read transaction file and write to new_master
-void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <int, int> books){
+void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <int, int>& books){
 
     TransactionRec buffer;    
     while(transact.read((char *) &buffer, sizeof(TransactionRec))){
-        cout << buffer.ToDo << endl;
-        cout << buffer.B.isbn << endl; 
+        cout << buffer.B.isbn << endl;
+        switch(buffer.ToDo){
+            case(Add):
+                cout << isbn_exist(buffer.B.isbn, books) << endl;
+                cout << "perform add" << endl;
+                break;
+            case(Delete):
+                cout << isbn_exist(buffer.B.isbn, books) << endl;
+                cout << "perform delete" << endl;
+                break;
+            case(ChangeOnhand):
+                cout << isbn_exist(buffer.B.isbn, books) << endl;
+                cout << "change onhand" << endl;
+                break;
+            case(ChangePrice):
+                cout << isbn_exist(buffer.B.isbn, books) << endl;
+                cout << "change price" << endl;
+                break;
+        }
     }   
 
 
 }
 
-
-
-//need a function to check whether isbn exists or not
-
+//function to check whether isbn exists or not
+bool isbn_exist(unsigned int isbn, map<int, int>& books){
+    map <int, int>:: iterator it;
+    it = books.find(isbn);
+    cout << isbn << endl;
+    cout << "hi" << endl;
+    cout << books[isbn] << endl;
+    cout << "bye" << endl;
+    if(it == books.end()){
+        return 0;
+    }
+   
+    return 1;    
+}
