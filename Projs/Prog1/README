@@ -1,0 +1,11 @@
+Goal: 
+
+    The program  should handle inventory for a book company and be able to perform transactions such as add, delete, change onhand, and change price.
+
+Input and Output: (describe all input and output files)
+
+    The program reads in a master file and a transaction file. It creates two new files, a new master and an errors file. Once the new master is created, it is read through and its contents are put to the screen. The error file contains all errors the program ran into while trying to complete transactions. 
+
+Algorithm Outline & Efficiency:
+
+    
