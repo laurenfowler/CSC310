@@ -24,10 +24,10 @@ struct TransactionRec{
 };
 
 //prototypes
-map <unsigned int, int> read_master(fstream& file);
-void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <unsigned int, int>& books);
-bool isbn_exist(unsigned int isbn, map<unsigned int, int>& books);
-void add(fstream& master, map <unsigned int, int>& books, TransactionRec& buffer);
+map <unsigned int, BookRec> read_master(fstream& file);
+void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <unsigned int, BookRec>& books);
+bool isbn_exist(unsigned int isbn, map<unsigned int, BookRec>& books);
+void add(fstream& master, map <unsigned int, BookRec>& books, TransactionRec& buffer);
 
 int main(int argc, char* argv[]){
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
     fstream error_file("ERRORS", ios::out);
 
     //read in copy.out and create map container
-    map <unsigned int, int> books = read_master(master_in);
+    map <unsigned int, BookRec> books = read_master(master_in);
     perform_transactions(master_in, transt_in, outfile, error_file, books);
 
     //remove copy.out file
@@ -58,38 +58,34 @@ int main(int argc, char* argv[]){
 }
 
 //read copy of master into map
-map <unsigned int, int> read_master(fstream& file){
-    map <unsigned int, int> books;
+map <unsigned int, BookRec> read_master(fstream& file){
+    map <unsigned int, BookRec> books;
     BookRec buffer;
     int lines = 1;
-    int byte_offset = 87; //double check this number
+    //int byte_offset = sizeof(BookRec); //double check this number
 
-    //unrolling the loop makes the runtime faster
     while(file.read((char *) &buffer, sizeof(BookRec))){
-        cout << "adding " << buffer.isbn << "to the map" << endl;
-        books[buffer.isbn] = byte_offset*lines;
-      //  file.read((char *) &buffer, sizeof(BookRec));
+        books[buffer.isbn] = buffer;
         lines++;
-     //   books[buffer.isbn] = byte_offset*lines;
-     //   lines++;
     }
 
-    cout << "check everything put in map" << endl;
+/*  cout << "check everything put in map" << endl;
     map <unsigned int, int> :: iterator it;
     for(it = books.begin(); it != books.end(); it++){
         cout << it -> first << " " << it -> second << endl;
     }
-    cout << endl;
+    cout << endl;*/
 
     return books;
 
 }
 
 //read transaction file and write to new_master
-void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <unsigned int, int>& books){
+void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <unsigned int, BookRec>& books){
 
     TransactionRec buffer;  
     int transact_num = 0;  
+    map<unsigned int, BookRec> :: iterator it;
     while(transact.read((char *) &buffer, sizeof(TransactionRec))){
         transact_num++;
         switch(buffer.ToDo){
@@ -100,9 +96,7 @@ void perform_transactions(fstream& master, fstream& transact, fstream& new_maste
                     //write it to the ERRORS file
                 }
                 else{
-                    cout << "ADD " << buffer.B.isbn << " to master" << endl;
-                    add(master, books, buffer);
-                    cout << endl;
+                    books[buffer.B.isbn] = buffer.B;
                 }
 
                 break;
@@ -124,10 +118,10 @@ void perform_transactions(fstream& master, fstream& transact, fstream& new_maste
 
 }
 
-void add(fstream& master, map <unsigned int, int>& books, TransactionRec& buffer){
+/*void add(fstream& master, map <unsigned int, BookRec>& books, TransactionRec& buffer){
     
     
-    map <unsigned int, int>:: iterator it;
+    map <unsigned int, BookRec>:: iterator it;
     
     //add buffer to map
     books[buffer.B.isbn] = 0; 
@@ -136,13 +130,31 @@ void add(fstream& master, map <unsigned int, int>& books, TransactionRec& buffer
         cout << it -> first << " " << it -> second << endl;
     }
 
+    //set byte offset of books at buffer.B.isbn
+    it = books.find(buffer.B.isbn);
+    it++;
+    books[buffer.B.isbn] = it -> second;
 
+    //fix all other byte offsets
+    it = books.find(buffer.B.isbn);
+    it++;
+    while(it != books.end()){
+        it -> second = (it -> second) +  sizeof(BookRec);
+        it++;
+    }
+
+    cout << endl;
+    cout << "after reset" << endl; 
+    for(it = books.begin(); it != books.end(); it++){
+        cout << it -> first << " " << it -> second << endl;
+    }
 
 
 }
+*/
 
 //function to check whether isbn exists or not
-bool isbn_exist(unsigned int isbn, map<unsigned int, int>& books){
+bool isbn_exist(unsigned int isbn, map<unsigned int, BookRec>& books){
     //map <int, int>:: iterator it;
     if(books.find(isbn) == books.end()){
         return 0;
