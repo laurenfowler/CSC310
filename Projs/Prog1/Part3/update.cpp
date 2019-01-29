@@ -87,6 +87,12 @@ void perform_transactions(fstream& master, fstream& transact, fstream& new_maste
     int transact_num = 0;  
     map<unsigned int, BookRec> :: iterator it;
     while(transact.read((char *) &buffer, sizeof(TransactionRec))){
+        cout << "before" << endl;
+        for(it = books.begin(); it != books.end(); it++){
+            BookRec tmp = it -> second;
+            cout << tmp.isbn << endl;
+        }
+        cout << endl;
         transact_num++;
         switch(buffer.ToDo){
             case(Add):
@@ -98,11 +104,15 @@ void perform_transactions(fstream& master, fstream& transact, fstream& new_maste
                 else{
                     books[buffer.B.isbn] = buffer.B;
                 }
-
                 break;
             case(Delete):
-                //cout << isbn_exist(buffer.B.isbn, books) << endl;
-                cout << "perform delete" << endl;
+                if(!isbn_exist(buffer.B.isbn, books)){
+                    cerr << "Error in transaction number " << transact_num << ": cannot delete---no such key" << buffer.B.isbn << endl;
+                }
+                else{
+                    books.erase(buffer.B.isbn);
+                }
+
                 break;
             case(ChangeOnhand):
                 //cout << isbn_exist(buffer.B.isbn, books) << endl;
@@ -113,6 +123,13 @@ void perform_transactions(fstream& master, fstream& transact, fstream& new_maste
                 cout << "change price" << endl;
                 break;
         }
+        cout << "after" << endl;
+        for(it = books.begin(); it != books.end(); it++){
+            BookRec tmp = it -> second;
+            cout << tmp.isbn << endl;
+        }
+        cout << endl;
+
     }   
 
 
