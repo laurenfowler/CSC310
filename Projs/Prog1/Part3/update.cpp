@@ -25,9 +25,8 @@ struct TransactionRec{
 
 //prototypes
 map <unsigned int, int> read_master(fstream& file);
-void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <unsigned int, int>& books);
+void perform_transactions(int total_bytes, fstream& master, fstream& transact, fstream& error_file, fstream& new_master, map <unsigned int, int>& books);
 bool isbn_exist(unsigned int isbn, map<unsigned int, int>& books);
-void add(fstream& master, map <unsigned int, int>& books, TransactionRec& buffer);
 
 int main(int argc, char* argv[]){
 
@@ -41,14 +40,21 @@ int main(int argc, char* argv[]){
     system(command.c_str());
 
     //open files for input/output
-    fstream master_in("copy.out",  ios::in | ios:: binary);   
+    fstream master_in("copy.out",  ios::in | ios::out| ios:: binary); //ios::out is crucial to be able to write new stuff  
     fstream transt_in(transaction.c_str(), ios::in | ios:: binary);
     fstream outfile(new_master.c_str(), ios::out| ios:: binary);
     fstream error_file("ERRORS", ios::out);
 
     //read in copy.out and create map container
     map <unsigned int, int> books = read_master(master_in);
-    perform_transactions(master_in, transt_in, outfile, error_file, books);
+    int total_bytes = books.size() * sizeof(BookRec);
+    perform_transactions(total_bytes, master_in, transt_in, error_file, outfile, books);
+
+    //close
+    master_in.close();
+    transt_in.close();
+    error_file.close();
+    outfile.close();
 
     //remove copy.out file
     system("rm copy.out");
@@ -62,28 +68,20 @@ map <unsigned int, int> read_master(fstream& file){
     map <unsigned int, int> books;
     BookRec buffer;
     int lines = 0;
-    //int byte_offset = sizeof(BookRec); //double check this number
-
+    
     while(file.read((char *) &buffer, sizeof(BookRec))){
         books[buffer.isbn] = lines * sizeof(BookRec);
         lines++;
     }
-
-/*  cout << "check everything put in map" << endl;
-    map <unsigned int, int> :: iterator it;
-    for(it = books.begin(); it != books.end(); it++){
-        cout << it -> first << " " << it -> second << endl;
-    }
-    cout << endl;*/
 
     return books;
 
 }
 
 //read transaction file and write to new_master
-void perform_transactions(fstream& master, fstream& transact, fstream& new_master, fstream& error_file, map <unsigned int, int>& books){
+void perform_transactions(int total_bytes, fstream& master, fstream& transact, fstream& error_file, fstream& new_master,  map <unsigned int, int>& books){
 
-    //revive file pointer
+    //revive master file pointer
     master.clear();
 
     TransactionRec buffer;  
@@ -99,10 +97,22 @@ void perform_transactions(fstream& master, fstream& transact, fstream& new_maste
                     //write it to the ERRORS file
                 }
                 else{
-                    books[buffer.B.isbn] = books.size() * sizeof(BookRec);
-                    //put file pointer at end of file
-                    master.seekg(ios::end);
-                    master.write((char*) &buffer.B, sizeof(BookRec));               
+                    //cout << "adding " << buffer.B.name << " isbn " << buffer.B.isbn;
+                    books[buffer.B.isbn] = total_bytes;
+                    //cout << " hopfully to " << total_bytes;
+                    //update total bytes
+                    total_bytes = total_bytes + sizeof(BookRec);
+                    master.clear();
+                    master.seekp(books[buffer.B.isbn]);
+                    master.clear();
+                    cout << " " << buffer.B.author;
+                    //BookRec tmp;
+                    //master.read((char *) &tmp, sizeof(BookRec));
+                    //cout << tmp.author << endl;
+                    //cout << " but actually to pos " <<  master.tellp() << endl;
+                    master.write((char*) &buffer.B, sizeof(BookRec));  
+                    master.clear();   
+                    //cout << "master.clear() bring file pointer to " << master.tellp() << endl;          
                 }
                 break;
             case(Delete):
@@ -112,73 +122,60 @@ void perform_transactions(fstream& master, fstream& transact, fstream& new_maste
                     cerr << "Error in transaction number " << transact_num << ": cannot delete---no such key" << buffer.B.isbn << endl;
                 }
                 else{
+                    //cout << "deleting book" << endl;
                     books.erase(buffer.B.isbn);
                 }
                 break;
             case(ChangeOnhand):
                 //if isbn exists, change the onhand amout 
                 if(isbn_exist(buffer.B.isbn, books)){
+                   // cout << "changing onhand" << endl;
                     //check for errors
                     int onhand_change = buffer.B.onhand;
                     BookRec tmp;
                     int offset =  books[buffer.B.isbn];
                     master.seekp(offset);
                     master.read((char *) &tmp, sizeof(BookRec));
-                    //cout << tmp.isbn << endl;
-                    cout << buffer.B.isbn << " " << tmp.isbn << endl;
-                    //cout << tmp.onhand << endl;
+//                    cout << "before " << tmp.onhand << endl;
                     tmp.onhand = tmp.onhand + onhand_change;
-                    //cout << tmp.onhand << endl;
+//                    cout << "after " << tmp.onhand << endl;
+                    if(tmp.onhand < 0){
+                        cerr << "Error in transaction number " << transact_num << " count == " << tmp.onhand << " for key " << tmp.isbn << endl;
+                        tmp.onhand = 0;
+                    }
+                    //go back to original offset so wont write over next book record
+                    master.seekp(offset);
                     master.write((char*) &tmp, sizeof(BookRec));
                 }
                 else{
-
+                    cerr << "Error in transaction number " << transact_num << " cannot change count--no such key " << buffer.B.isbn << endl;
                 }
                 break;
             case(ChangePrice):
-                //cout << isbn_exist(buffer.B.isbn, books) << endl;
-                cout << "change price" << endl;
+                if(isbn_exist(buffer.B.isbn, books)){
+                    //cout << "changing price" << endl;
+                    int offset =  books[buffer.B.isbn];
+                    master.seekp(offset);
+                    master.write((char *) &buffer.B, sizeof(BookRec));
+                }
+                else{
+                    cerr << "Error in transaction number " << transact_num << " cannot change price--no such key " << buffer.B.isbn << endl;
+                }
                 break;
         }
-     }   
-
-
-}
-
-/*void add(fstream& master, map <unsigned int, BookRec>& books, TransactionRec& buffer){
+    }    
     
-    
-    map <unsigned int, BookRec>:: iterator it;
-    
-    //add buffer to map
-    books[buffer.B.isbn] = 0; 
-    
+    //write to new_master
+    BookRec buffer1;
     for(it = books.begin(); it != books.end(); it++){
-        cout << it -> first << " " << it -> second << endl;
+        master.clear();
+        master.seekp(it -> second);
+        master.read((char *) &buffer1, sizeof(BookRec));
+        new_master.write((char *) &buffer1, sizeof(BookRec));
     }
 
-    //set byte offset of books at buffer.B.isbn
-    it = books.find(buffer.B.isbn);
-    it++;
-    books[buffer.B.isbn] = it -> second;
-
-    //fix all other byte offsets
-    it = books.find(buffer.B.isbn);
-    it++;
-    while(it != books.end()){
-        it -> second = (it -> second) +  sizeof(BookRec);
-        it++;
-    }
-
-    cout << endl;
-    cout << "after reset" << endl; 
-    for(it = books.begin(); it != books.end(); it++){
-        cout << it -> first << " " << it -> second << endl;
-    }
-
-
+  
 }
-*/
 
 //function to check whether isbn exists or not
 bool isbn_exist(unsigned int isbn, map<unsigned int, int>& books){
