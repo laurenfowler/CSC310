@@ -6,6 +6,27 @@ Input and Output: (describe all input and output files)
 
     The program reads in a master file and a transaction file. It creates two new files, a new master and an errors file. Once the new master is created, it is read through and its contents are put to the screen. The error file contains all errors the program ran into while trying to complete transactions. 
 
-Algorithm Outline & Efficiency:
+Algorithm Outline:
 
-    
+  1. read master and populate map with isbn's and offsets
+  2. perform the transactions
+  3. read transaction file
+      3a. Use switch statement to complete transactions
+  4. Add:
+      4a. If file exists, generate error message
+      4b. If file doesnt exist, add isbn and byte offset to map
+      4c. Write new book record to end of master copy
+  5. Delete:
+      5a. If record does not exist, generate error message
+      5b. Remove book record from map, do not need to do anything to master
+  6. ChangeOnhand
+      6a. If record does not exist or amount becomes 0, generate error
+      6b. If amount becomes negative, make total amount equal 0
+      6c. Find original book record, add new amount to book record
+      6d. Write over old book record with new one
+  7.Change Price
+      7a. If record does not exist, generate eror
+      7b. If record exists, replace current record with new one
+  8. Write to new Master
+      8a. Use iterator to loop through book map and write out book records
+          to offsets in new master

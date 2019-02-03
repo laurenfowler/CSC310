@@ -93,8 +93,9 @@ void perform_transactions(int total_bytes, fstream& master, fstream& transact, f
             case(Add):
                 //if isbn exists add error message to ERRORS, if not, add book to map and master.out
                 if(isbn_exist(buffer.B.isbn, books)){
-                    cerr << "Error in transaction number " << transact_num << ": cannot add---duplicate key " << buffer.B.isbn << endl;
+                    string msg = "Error in transaction number " + to_string(transact_num) + ": cannot add---duplicate key " + to_string(buffer.B.isbn);
                     //write it to the ERRORS file
+                    error_file << msg << endl;
                 }
                 else{
                     //cout << "adding " << buffer.B.name << " isbn " << buffer.B.isbn;
@@ -105,7 +106,7 @@ void perform_transactions(int total_bytes, fstream& master, fstream& transact, f
                     master.clear();
                     master.seekp(books[buffer.B.isbn]);
                     master.clear();
-                    cout << " " << buffer.B.author;
+                    //cout << " " << buffer.B.author;
                     //BookRec tmp;
                     //master.read((char *) &tmp, sizeof(BookRec));
                     //cout << tmp.author << endl;
@@ -119,7 +120,8 @@ void perform_transactions(int total_bytes, fstream& master, fstream& transact, f
                 //if isbn doesnt exist, add error message to ERRORS, else, erase the book from the map
                 //no need to do anything to the master file
                 if(!isbn_exist(buffer.B.isbn, books)){
-                    cerr << "Error in transaction number " << transact_num << ": cannot delete---no such key" << buffer.B.isbn << endl;
+                    string msg =  "Error in transaction number " + to_string(transact_num) + ": cannot delete---no such key" + to_string(buffer.B.isbn);
+                    error_file << msg << endl;
                 }
                 else{
                     //cout << "deleting book" << endl;
@@ -140,7 +142,8 @@ void perform_transactions(int total_bytes, fstream& master, fstream& transact, f
                     tmp.onhand = tmp.onhand + onhand_change;
 //                    cout << "after " << tmp.onhand << endl;
                     if(tmp.onhand < 0){
-                        cerr << "Error in transaction number " << transact_num << " count == " << tmp.onhand << " for key " << tmp.isbn << endl;
+                        string msg =  "Error in transaction number " + to_string(transact_num) + " count == " + to_string(tmp.onhand) + " for key " + to_string(tmp.isbn);
+                        error_file << msg << endl;
                         tmp.onhand = 0;
                     }
                     //go back to original offset so wont write over next book record
@@ -148,7 +151,8 @@ void perform_transactions(int total_bytes, fstream& master, fstream& transact, f
                     master.write((char*) &tmp, sizeof(BookRec));
                 }
                 else{
-                    cerr << "Error in transaction number " << transact_num << " cannot change count--no such key " << buffer.B.isbn << endl;
+                    string msg = "Error in transaction number " + to_string(transact_num) + " cannot change count--no such key " + to_string(buffer.B.isbn);
+                    error_file << msg << endl;
                 }
                 break;
             case(ChangePrice):
@@ -159,7 +163,8 @@ void perform_transactions(int total_bytes, fstream& master, fstream& transact, f
                     master.write((char *) &buffer.B, sizeof(BookRec));
                 }
                 else{
-                    cerr << "Error in transaction number " << transact_num << " cannot change price--no such key " << buffer.B.isbn << endl;
+                    string msg =  "Error in transaction number " + to_string(transact_num) + " cannot change price--no such key " + to_string(buffer.B.isbn);
+                    error_file << msg << endl;
                 }
                 break;
         }
