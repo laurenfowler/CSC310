@@ -5,6 +5,7 @@
 using namespace std;
 
 //prototypes
+void error_checking(int argc, char *argv[], fstream &file1, fstream &file2,  bool &cflag, bool &nflag, int &ignore);
 
 int main(int argc, char *argv[]){
 
@@ -13,8 +14,14 @@ int main(int argc, char *argv[]){
 
     fstream file1 ((argv[argc-2]), ios::in);
     fstream file2 ((argv[argc-1]), ios::in); 
+    error_checking(argc, argv, file1, file2, cflag, nflag, ignore);
 
-    //check for too many command line arguments
+    return 0;
+}
+
+void error_checking(int argc, char *argv[], fstream &file1, fstream &file2,  bool &cflag, bool &nflag, int &ignore){
+
+     //check for too many command line arguments
     if(argc > 6 || argc < 3){
        cerr << "cmp: illegal number of parameters" << endl;
        exit(0);
@@ -52,7 +59,7 @@ int main(int argc, char *argv[]){
             nflag == true;
             //check if arg2 is digit else throw error
             if(isdigit(arg2[0])){
-                ignore = atoi(arg2);
+                ignore = atoi(argv[2]);
             }
             else{
                 cerr << "cmp: illegal byte number" << endl;
@@ -70,26 +77,29 @@ int main(int argc, char *argv[]){
         }
     }
     else{
-
-
-    }
-
-    //read in options
-    /*if(argc > ){
-
-    }
-    if(argc > 3 ){
-        if(argv[1] == "-c"){
+        arg = argv[1];
+        if(arg == "-c"){
             cflag = true;
+            if (argv[2] == "-N"){
+                nflag = true;
+                //check digit
+            }
+            else{
+                cerr << "cmp: illegal option" << endl;
+                exit(0);
+            }
         }
-        if(argv[1] == "-n"){
+        else if(arg == "-N"){
             nflag = true;
-            ignore = argv[2];   
+            string arg2 = argv[2];
+            if(isdigit(arg2[0]){
+                ignore = atoi(argv[2]);
+            }
+            else{
+                cerr << "cmp: illegal byte number" << endl;
+                exit(0);
+            }
         }
-    } */
 
-
-
-    return 0;
+    }
 }
-
