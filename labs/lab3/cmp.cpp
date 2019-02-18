@@ -7,6 +7,8 @@ using namespace std;
 
 //prototypes
 void error_checking(int argc, char *argv[], fstream &file1, fstream &file2,  bool &cflag, bool &nflag, int &ignore);
+void cmp(fstream &file1, fstream &file2, bool &cflag, bool &nflag, int &ignore, string f1, string f2);
+bool compare(char ch1, char ch2);
 
 int main(int argc, char *argv[]){
 
@@ -34,10 +36,74 @@ int main(int argc, char *argv[]){
     //error checks
     error_checking(argc, argv, file1, file2, cflag, nflag, ignore);
 
+    //call cmp
+    cmp(file1, file2, cflag, nflag, ignore, (string) argv[argc-2], (string) argv[argc-1]);
+
 
     return 0;
 }
 
+void cmp(fstream &file1, fstream &file2, bool &cflag, bool &nflag, int &ignore, string f1, string f2){
+
+    char ch1, ch2; //where file will be read in
+    int bytes = 0;
+    int lines = 1; 
+
+    //ignore certian # of bytes
+    if(nflag){
+        bytes = ignore;
+        file1.seekg(ignore);
+        file2.seekg(ignore);
+    }
+
+    while(file1.get(ch1)){
+        file2.get(ch2);
+        cout << ch1 << " " << ch2 << endl;
+        //increment byte count
+        bytes++;
+
+        //check for eof
+        if(file1.eof()){
+            cout << "EOF reached on " << f1 << endl; 
+            exit(0);
+        }
+        if(file2.eof()){
+            cout << "EOF reached on " << f2 << endl;
+            exit(0);
+        }
+
+        //increments line count
+        if(ch1 == '\n' && ch2 == '\n'){
+            lines++;
+        }
+        
+        //compare characters       
+        bool same = compare(ch1, ch2);
+        if(!same){
+            //oct converts 
+            if(cflag){
+                cout << f1 << " " << f2 << "differ: char " << bytes << ", line " << lines << " is ";
+                cout << oct << (int)ch1 << " " << ch1 << " " << oct << (int) ch2 << " " << ch2 << endl;
+            }
+            else{
+                cout << f1 << " " << f2 << " differ: byte " << bytes << ", line " << lines << endl;
+            }
+            exit(0);
+        }
+    }
+
+}
+
+//compares 2 characters
+bool compare(char ch1, char ch2){
+
+    if(ch1 == ch2){
+        return true;
+    }
+    return false;
+}
+
+//checks for all errors and sets up -c -n and # of bytes to ignore option if in paramters
 void error_checking(int argc, char *argv[], fstream &file1, fstream &file2,  bool &cflag, bool &nflag, int &ignore){
 
      //check for too many command line arguments
@@ -77,7 +143,7 @@ void error_checking(int argc, char *argv[], fstream &file1, fstream &file2,  boo
         arg = argv[1];
         string arg2 = argv[2];
         if(arg == "-N"){
-            nflag == true;
+            nflag = true;
             //check if arg2 is digit else throw error
             if(isdigit(arg2[0])){
                 ignore = atoi(argv[2]);
@@ -138,7 +204,6 @@ void error_checking(int argc, char *argv[], fstream &file1, fstream &file2,  boo
                 cerr << "cmp: illegal byte number" << endl;
                 exit(0);
             }
-
         }
     }
 }
