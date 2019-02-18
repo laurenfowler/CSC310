@@ -5,10 +5,13 @@
 using namespace std;
 
 string compress(string input);
+string uncompress(string input);
 
 int main(){
     string myInput = "93 93 93 93 92 91 91 94 94 94 94 94 95 95 95 73 73 73 73 73 73 73";
-    cout << compress(myInput) << endl;
+    string compact = compress(myInput);
+    cout << compact << endl;
+    cout << uncompress(compact) << endl;
 
 }
 
@@ -29,7 +32,6 @@ string compress(string input){
 
     //reads in integers, ignoring white space
     while(ss >> curr){
-        cout << prev << " " << curr << endl;
         if(curr == prev){
             tmp_string = tmp_string + to_string(curr) + " ";
             count++;
@@ -77,6 +79,33 @@ string compress(string input){
 }
 
 string uncompress(string input){
+
+    string output;
+    int curr, num, times;
+
+    //convert to stringstream
+    stringstream ss, tmp;
+    ss.str(input);
+
+    //read in as hex so file pointer wont die
+    while(ss >> hex >> curr){
+        //this indicates ff
+        if(curr == 255){
+            ss >> dec >> num;
+            ss >> times;
+            for(int i=0; i<times; i++){
+                output = output + to_string(num) + " ";
+            }
+        }
+        else{
+            //go back and read in var again as decimal
+            ss.seekg(-2, ios::cur);
+            ss >> dec >> curr;
+            output = output + to_string(curr) + " ";
+        }
+    }
+
+    return output;
 
 }
 
