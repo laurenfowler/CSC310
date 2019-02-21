@@ -1,0 +1,4 @@
+directories are not folder, but the / is a delimeter
+the / means it has to be encoded as a directory yet it is a file
+tar preserves permissions, timestamps, but we only care about it on files
+dont touch file.h and file.cpp -- gifts
