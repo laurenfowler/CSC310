@@ -9,11 +9,11 @@ using namespace std;
 class File
 {
    public :
-       File (const File& otherFile);
+       File (const File& otherFile); //copy constructor
        File (const char name[], const char pmode[],
-             const char size[], const char stamp[]);
-       File ();
-       File & operator = (const File& otherFile);
+             const char size[], const char stamp[]); //constructor w/ info
+       File (); //constructor
+       File & operator = (const File& otherFile); //copy assignment
        string getSize() const;
        string getName() const;
        string getPmode() const;
