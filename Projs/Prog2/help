@@ -7,4 +7,4 @@ Option Examples:
   tar -cf archive.tar foo bar  # Create archive.tar from files foo and bar.
   tar -tf archive.tar          # List all files in archive.tar verbosely.
   tar -xf archive.tar          # Extract all files from archive.tar.
-Report bugs to <digh_ad@mercer.edu>.
+Report bugs to <10957657@live.mercer.edu>.
