@@ -12,6 +12,7 @@ struct fInfo{
 int check_errors(int argc, char *argv[]);
 bool check_dir(string filename);
 void find_files(fInfo file, vector<fInfo> &all_files);
+void get_protection(string filename);
 
 int main(int argc, char *argv[]){
 
@@ -47,15 +48,13 @@ int main(int argc, char *argv[]){
                 counter++;
             }
 
+            //get all files into all_files vector 
             for(it = file_vec.begin(); it != file_vec.end(); it++){
                 temp = *it;
                 find_files(temp, all_files);   
             }
-            
-            for(it = all_files.begin(); it!=all_files.end(); it++){
-                temp = *it;
-                cout << temp.filename << endl;
-            }
+           
+            get_protection("Examples");
 
             break;
 
@@ -73,6 +72,40 @@ int main(int argc, char *argv[]){
 
 
     return 0;
+}
+
+void get_protection(string filename){
+    struct stat s_struct;
+    stat(filename.c_str(), &s_struct);
+    string permissions;    
+    char usr[3];
+    char grp[3];
+    char wld[3];
+
+    //gets decimal val of protection mode
+    int user = (s_struct.st_mode & S_IRWXU);
+    int group = (s_struct.st_mode & S_IRWXG);
+    int world = (s_struct.st_mode & S_IRWXO);
+   
+
+    //convert to octal using sprintf
+    sprintf(usr, "%o", user);
+    sprintf(grp, "%o", group);
+    sprintf(wld, "%o", world);
+
+    cout << "hi" << endl;
+    cout << usr[0] << grp[0] << wld[0] << endl;
+    string str(usr);
+    cout << str << endl;
+    //permissions.append(str);
+    //str = (grp);
+    //permissions.append(str);
+    //str = (wld);
+    //permissions.append(str);
+    //cout << "hi" << endl;
+   // cout << permissions << endl;
+    
+
 }
 
 bool check_dir(string filename){
