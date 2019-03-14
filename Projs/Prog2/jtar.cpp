@@ -12,7 +12,10 @@ struct fInfo{
 int check_errors(int argc, char *argv[]);
 bool check_dir(string filename);
 void find_files(fInfo file, vector<fInfo> &all_files);
-void get_protection(string filename);
+string get_protection(string filename);
+string get_size(string filename);
+string get_timestamp(string filename);
+string format_time(string time);
 
 int main(int argc, char *argv[]){
 
@@ -24,6 +27,7 @@ int main(int argc, char *argv[]){
     struct fInfo temp; //temp fInfo struct
     vector <fInfo> :: iterator it;
     string to_find = "/";
+    string time;
 
     //swtich statement to handle request type
     switch(type){
@@ -53,9 +57,9 @@ int main(int argc, char *argv[]){
                 temp = *it;
                 find_files(temp, all_files);   
             }
-           
-            get_protection("Examples");
-
+            //gets and then formats time
+            time = get_timestamp("Examples"); 
+            time = format_time(time)
             break;
 
         case 1:
@@ -74,13 +78,68 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
-void get_protection(string filename){
+//returns modify time
+string get_timestamp(string filename){
+    struct stat s_struct;
+    stat(filename.c_str(), &s_struct);
+    time_t mt_time = s_struct.st_mtime;
+    string time = ctime(&mt_time);
+    return time;
+
+}
+
+//formats the time string
+string format_time(string time){
+
+    //aint pretty but it works
+    map <string, string> months;
+    months["Jan"] = "01";
+    months["Feb"] = "02";
+    months["Mar"] = "03";
+    months["Apr"] = "04";
+    months["May"] = "05";
+    months["Jun"] = "06";
+    months["Jul"] = "07";
+    months["Aug"] = "08";
+    months["Sep"] = "09";
+    months["Oct"] = "10";
+    months["Nov"] = "11";
+    months["Dec"] = "12";
+    
+    string format;
+    string ignore; //will ignore the day of the week
+    string month;
+    int day, hour, min, sec, year;
+    char tmp;
+    
+    stringstream ss;
+    ss.str(time);
+    ss>>ignore;
+    ss>>month;
+    ss>>day;
+    ss>>hour;
+    ss>>tmp;
+    ss>>min;
+    ss>>tmp;
+    ss>>sec;
+    ss>>year;
+
+    format = to_string(year) + months[month] + to_string(day) + to_string(hour) + to_string(min) + "." + to_string(sec);    
+    return format; 
+}
+
+//returns size of file
+string get_size(string filename){
+    struct stat s_struct;
+    stat(filename.c_str(), &s_struct);
+    return to_string(s_struct.st_size);
+}
+
+//returns octal form of protection mode
+string get_protection(string filename){
     struct stat s_struct;
     stat(filename.c_str(), &s_struct);
     string permissions;    
-    char usr[3];
-    char grp[3];
-    char wld[3];
 
     //gets decimal val of protection mode
     int user = (s_struct.st_mode & S_IRWXU);
@@ -88,26 +147,17 @@ void get_protection(string filename){
     int world = (s_struct.st_mode & S_IRWXO);
    
 
-    //convert to octal using sprintf
-    sprintf(usr, "%o", user);
-    sprintf(grp, "%o", group);
-    sprintf(wld, "%o", world);
+    //cheap and dirty way of doing octal, but will always work in this case
+    //convert to octal. user and group always divisible by 64 and 8 respetivly, world always needs mod
+    user = user/64;
+    group = group/8;
+    world = world%8;
 
-    cout << "hi" << endl;
-    cout << usr[0] << grp[0] << wld[0] << endl;
-    string str(usr);
-    cout << str << endl;
-    //permissions.append(str);
-    //str = (grp);
-    //permissions.append(str);
-    //str = (wld);
-    //permissions.append(str);
-    //cout << "hi" << endl;
-   // cout << permissions << endl;
-    
-
+    permissions = to_string(user) + to_string(group) + to_string(world);
+    return permissions;
 }
 
+//checks if string is a directory
 bool check_dir(string filename){
     struct stat s_struct;
     stat(filename.c_str(), &s_struct);
@@ -137,8 +187,7 @@ void find_files(fInfo file, vector<fInfo> &all_files){
             }
         }
         closedir(dirp);
-    }
-    
+    }   
 } 
 
 
