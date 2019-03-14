@@ -1,8 +1,7 @@
 //error checking
-//also turns on flags for main program
 #include "includes.h"
-#include "prototypes.h"
 
+bool check_file(string name);
 int check_errors(int argc, char *argv[]){
     
     //handles no option being specified, will exit program if true
