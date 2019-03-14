@@ -89,12 +89,16 @@ int main(int argc, char *argv[]){
                 final_files.push_back(store);  
             }    
 
-
             //create tar name and open the file
             tar_name = argv[2];
             tar_name.append(".tar");
             fstream outfile(tar_name, ios::out | ios::binary);
-      
+
+            //z is a temp string to hold string of tar_size
+            string z = to_string(tar_size);
+            //write size of tar to file
+            outfile.write((char *) z.c_str(), sizeof(char)*z.size());
+
             //create the tar file 
             for(fit=final_files.begin(); fit != final_files.end(); fit++){
                 tmp = *fit;
@@ -115,8 +119,24 @@ int main(int argc, char *argv[]){
             break;
         }
         case 1:
-            cout << "-tf chosen" << endl;
+        {
+            fstream infile(argv[2], ios::in|ios::binary);     
+     
+            //get size of tar file
+            infile >> tar_size;  
+           
+            while(infile.read((char *) &tmp, sizeof(File))){
+                cout << tmp.getName() << endl;
+
+                //will skip over file info
+                if(tmp.isADir() == false){
+                    int move_bytes = stoi(tmp.getSize());
+                    infile.seekg(move_bytes, ios::cur);
+                }
+            }
+            
             break;
+        }
         case 2:
             cout << "-xf chosen" << endl;
             break;
