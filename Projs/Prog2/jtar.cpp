@@ -27,7 +27,9 @@ int main(int argc, char *argv[]){
     struct fInfo temp; //temp fInfo struct
     vector <fInfo> :: iterator it;
     string to_find = "/";
-    string time;
+    vector<File> final_files;
+    string time, fSize, protection;
+    int tar_size = 0;
 
     //swtich statement to handle request type
     switch(type){
@@ -57,9 +59,33 @@ int main(int argc, char *argv[]){
                 temp = *it;
                 find_files(temp, all_files);   
             }
-            //gets and then formats time
-            time = get_timestamp("Examples"); 
-            time = format_time(time)
+
+            //create the Files and put them in the file vector            
+            for(it = all_files.begin(); it != all_files.end(); it++){
+                temp = *it;
+                time = get_timestamp(temp.filename);
+                time = format_time(time);                         
+                fSize = get_size(temp.filename);
+                protection = get_protection(temp.filename);   
+                File store(temp.filename.c_str(), protection.c_str(), fSize.c_str(), time.c_str());
+                //turn on dir flag if necessary and do size calculation
+                if(temp.isDir){
+                    store.flagAsDir();
+                    int y = store.recordSize();
+                    //wont include fileSize bc would be including it twice then
+                    tar_size = tar_size + y;
+                }
+                else{
+                    int y = store.recordSize();
+                    //caculate the size of the tar file
+                    tar_size = tar_size + y + stoi(fSize);
+                }
+
+                final_files.push_back(store);  
+            }    
+            cout << tar_size << endl;        
+
+
             break;
 
         case 1:
@@ -167,6 +193,7 @@ bool check_dir(string filename){
     return false;
 }
 
+//gets all the files and stores them in a vector
 void find_files(fInfo file, vector<fInfo> &all_files){
     struct fInfo temp; 
     
