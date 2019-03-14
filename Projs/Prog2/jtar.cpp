@@ -28,8 +28,10 @@ int main(int argc, char *argv[]){
     vector <fInfo> :: iterator it;
     string to_find = "/";
     vector<File> final_files;
-    string time, fSize, protection;
+    vector<File> :: iterator fit; //file iterator (its fit)
+    string time, fSize, protection, tar_name;
     int tar_size = 0;
+    File tmp;
 
     //swtich statement to handle request type
     switch(type){
@@ -38,9 +40,10 @@ int main(int argc, char *argv[]){
             exit(0);
             break;
         case 0:
+        {
             size = argc - 3;
             counter = 0; //temp counter
-            //put all inital files into an array and check for dir
+            //put all inital files into an vector and check for dir
             for(int i=3; i<argc; i++){
                 temp.filename = argv[i];
                 temp.isDir = check_dir(temp.filename);
@@ -66,8 +69,11 @@ int main(int argc, char *argv[]){
                 time = get_timestamp(temp.filename);
                 time = format_time(time);                         
                 fSize = get_size(temp.filename);
-                protection = get_protection(temp.filename);   
+                protection = get_protection(temp.filename);  
+                
+                //create the file 
                 File store(temp.filename.c_str(), protection.c_str(), fSize.c_str(), time.c_str());
+
                 //turn on dir flag if necessary and do size calculation
                 if(temp.isDir){
                     store.flagAsDir();
@@ -80,14 +86,34 @@ int main(int argc, char *argv[]){
                     //caculate the size of the tar file
                     tar_size = tar_size + y + stoi(fSize);
                 }
-
                 final_files.push_back(store);  
             }    
-            cout << tar_size << endl;        
 
 
+            //create tar name and open the file
+            tar_name = argv[2];
+            tar_name.append(".tar");
+            fstream outfile(tar_name, ios::out | ios::binary);
+      
+            //create the tar file 
+            for(fit=final_files.begin(); fit != final_files.end(); fit++){
+                tmp = *fit;
+                outfile.write((char *) &tmp, sizeof(File));
+                //get contents of a file if it is not a directory
+                if(tmp.isADir() == false){
+                    fstream infile(tmp.getName().c_str(), ios::in);
+                    //get length of file and read into a char array
+                    size = stoi(tmp.getSize());
+                    char buf[size];
+                    infile.read(buf, size);
+                    //write out file contents to outfile
+                    outfile.write((char *) &buf, size);
+                    infile.close();
+                }
+            }
+            outfile.close();
             break;
-
+        }
         case 1:
             cout << "-tf chosen" << endl;
             break;
