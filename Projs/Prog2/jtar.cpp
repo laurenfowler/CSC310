@@ -11,7 +11,7 @@ struct fInfo{
 //prototypes
 int check_errors(int argc, char *argv[]);
 bool check_dir(string filename);
-void find_files(fInfo file);
+void find_files(fInfo file, vector<fInfo> &all_files);
 
 int main(int argc, char *argv[]){
 
@@ -37,6 +37,7 @@ int main(int argc, char *argv[]){
             for(int i=3; i<argc; i++){
                 temp.filename = argv[i];
                 temp.isDir = check_dir(temp.filename);
+
                 //housekeeping, removes '/' from end of directory
                 if(temp.isDir){
                    int x = temp.filename.find(to_find);
@@ -48,10 +49,13 @@ int main(int argc, char *argv[]){
 
             for(it = file_vec.begin(); it != file_vec.end(); it++){
                 temp = *it;
-                find_files(temp);   
-                cout << "looping" << endl;        
+                find_files(temp, all_files);   
             }
-            cout << "back in switch" << endl;
+            
+            for(it = all_files.begin(); it!=all_files.end(); it++){
+                temp = *it;
+                cout << temp.filename << endl;
+            }
 
             break;
 
@@ -80,11 +84,11 @@ bool check_dir(string filename){
     return false;
 }
 
-void find_files(fInfo file){
+void find_files(fInfo file, vector<fInfo> &all_files){
     struct fInfo temp; 
-    cout << file.filename << endl;
-    cout << "hi hi hi" << endl;
-
+    
+    all_files.push_back(file); //add file to the vector list
+    //checks dirs recursively
     if(check_dir(file.filename)){
         DIR* dirp = opendir(file.filename.c_str()); //open the directory
         struct dirent *ptr; //pointer
@@ -95,9 +99,8 @@ void find_files(fInfo file){
             }
             else{
                 temp.filename = file.filename + '/' + ptr->d_name;
-                cout << temp.filename << endl;
                 temp.isDir = check_dir(temp.filename); //checks to see if new file is dir so can list dirs in dirs
-                find_files(temp);
+                find_files(temp, all_files);
             }
         }
         closedir(dirp);
