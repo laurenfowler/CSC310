@@ -16,6 +16,7 @@ string get_protection(string filename);
 string get_size(string filename);
 string get_timestamp(string filename);
 string format_time(string time);
+string add_0(string name);
 
 int main(int argc, char *argv[]){
 
@@ -91,7 +92,6 @@ int main(int argc, char *argv[]){
 
             //create tar name and open the file
             tar_name = argv[2];
-            tar_name.append(".tar");
             fstream outfile(tar_name, ios::out | ios::binary);
 
             //z is a temp string to hold string of tar_size
@@ -138,8 +138,72 @@ int main(int argc, char *argv[]){
             break;
         }
         case 2:
-            cout << "-xf chosen" << endl;
+        {
+            fstream infile(argv[2], ios::in|ios::binary);     
+            string command;
+            //get size of tar file
+            infile >> tar_size;  
+           
+            while(infile.read((char *) &tmp, sizeof(File))){
+                string fname = tmp.getName();
+                if(tmp.isADir()){
+                    //check to see if dir exists by opening it and checking for failure  
+                    fstream check(fname.c_str(), ios::in);
+                    //if it fails, do mkdir
+                    if(check.fail() == true){
+                        command = "mkdir ";
+                        command.append(fname);
+                        system(command.c_str());
+
+                        //restore the permissions on the file
+                        command = "chmod ";
+                        command.append(tmp.getPmode());
+                        command.append(" ");
+                        command.append(fname);
+                        system(command.c_str());
+
+                        //restore the time on the file
+                        command = "touch -t ";
+                        command.append(tmp.getStamp());
+                        command.append(" ");
+                        command.append(fname);
+                        system(command.c_str());
+
+                    }
+                }
+                else{
+                    //get size of file and read in contents
+                    size = stoi(tmp.getSize());
+                    char buf[size]; 
+                    infile.read((char *) &buf, size);
+
+                    //remove the file and then open the file for ouput
+                    //command = "rm ";
+                    //command.append(fname);
+                    //system(command.c_str());
+                    fstream newfile(fname.c_str(), ios::out);
+            
+                    //write contents to the file 
+                    newfile.write((char *)&buf, sizeof(char)*size);
+                
+                    //restore the permissions on the file
+                    command = "chmod ";
+                    command.append(tmp.getPmode());
+                    command.append(" ");
+                    command.append(fname);
+                    system(command.c_str());
+
+                    //restore the time on the file
+                    command = "touch -t ";
+                    command.append(tmp.getStamp());
+                    command.append(" ");
+                    command.append(fname);
+                    system(command.c_str());
+
+                }
+            }
             break;
+        }
         case 3: 
             system("cat help");
             break;
@@ -156,6 +220,7 @@ string get_timestamp(string filename){
     stat(filename.c_str(), &s_struct);
     time_t mt_time = s_struct.st_mtime;
     string time = ctime(&mt_time);
+    cout << time << endl;
     return time;
 
 }
@@ -196,8 +261,19 @@ string format_time(string time){
     ss>>sec;
     ss>>year;
 
-    format = to_string(year) + months[month] + to_string(day) + to_string(hour) + to_string(min) + "." + to_string(sec);    
+    format = to_string(year) + months[month] + to_string(day) + add_0(to_string(hour)) + add_0(to_string(min)) + "." + add_0(to_string(sec));  
+    cout << format << endl;  
     return format; 
+}
+
+string add_0(string name){
+
+    if(name.size() == 1){
+        return "0" + name;
+    }
+
+    return name;
+
 }
 
 //returns size of file
