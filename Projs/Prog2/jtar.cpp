@@ -218,9 +218,8 @@ int main(int argc, char *argv[]){
 string get_timestamp(string filename){
     struct stat s_struct;
     stat(filename.c_str(), &s_struct);
-    time_t mt_time = s_struct.st_mtime;
-    string time = ctime(&mt_time);
-    cout << time << endl;
+    time_t at_time = s_struct.st_atime;
+    string time = ctime(&at_time);
     return time;
 
 }
@@ -262,7 +261,6 @@ string format_time(string time){
     ss>>year;
 
     format = to_string(year) + months[month] + to_string(day) + add_0(to_string(hour)) + add_0(to_string(min)) + "." + add_0(to_string(sec));  
-    cout << format << endl;  
     return format; 
 }
 
