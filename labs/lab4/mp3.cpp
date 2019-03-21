@@ -3,8 +3,6 @@
 #include <map>
 #include <algorithm>
 #include <vector>
-#include <iomanip>
-#include <map>
 #include <sstream>
 #include <iterator>
 #include <stdio.h>
@@ -39,117 +37,145 @@ class Artist {
      string name; // Artist's name
      int time;    // Total time of all songs on all albums by this artist
      int nsongs;  // Total number of songs on all albums by this artist
+     vector<Album> albums;
      bool operator < (Artist another) const { return name < another.name;}
-     bool operator == (Artist another) const {return name == another.name;}
 };
 
-typedef multimap <Artist, Album> mp3map;
 string clean_up(string str, char delim);
-
 int main(int argc, char* argv[]){
     //temp objects
     string instr;
     string title, time, artist, album, genre;
     int track;
 
-    mp3map records; 
-    mp3map:: iterator it;   
-
     if(argc < 2){
         cerr << "mp3: missing filename 'mp3'" << endl;
         exit(0);
     }
 
-    //open the file
     fstream infile(argv[1], ios::in);
-    
+    //vector of artists
+    vector<Artist> artists;   
+    vector<Artist>:: iterator ar_itr;
+    //album iterator
+    vector<Album>:: iterator al_itr;
     while(getline(infile, instr)){
+        bool found = false;
+        int tloc = 0;
+        int loc = 0;
+        int found_loc;
         map <int, Song> songs;
-        bool exists = false;
-        bool same_album = false;
         stringstream tmp(instr); //so it doesnt think its reached eof
+     
         //get all info into vars
         tmp >> title >> time >> artist >> album >> genre >> track;
 
         //clean up time and convert to int
-        int loc = time.find(':');
-        time.erase(loc, 1);
+        tloc = time.find(':');
+        time.erase(tloc, 1);
         int new_time = stoi(time);
+        artist = clean_up(artist, '_');
+        album = clean_up(album, '_');
 
-        //create song entry
+        for(ar_itr = artists.begin(); ar_itr != artists.end(); ar_itr++){
+            Artist tmp = *ar_itr;
+            if(tmp.name == artist){
+                cout << "artist found" << endl;
+                found = true;
+                found_loc = loc;
+            }
+            loc++;
+        } 
+        
+        //create song object
         Song new_song;
         new_song.title = clean_up(title, '_');
+        new_song.track = track;
         new_song.time = new_time;
-        new_song.track = track;  
+ 
+        
+        //if artist was found
+        bool album_found = false;
+        int aloc;
+        int x = 0;
 
-        Artist new_art;
-        new_art.name = clean_up(artist, '_');
-        Artist store;
+        //if artist is found
+        if(found){
+            //increment total time and num songs
+            artists[found_loc].time+=new_time;
+            artists[found_loc].nsongs++;
 
-        for(it = records.begin(); it != records.end(); it++){
-            Artist cmp = it -> first;
-            Album cmpA = it -> second;
-            if(cmp == new_art){
-                exists = true; //turn on flag so if wont run
-                //update artist information for each instance
-                cmp.time+=new_time;
-                cmp.nsongs++;
+            //get the album vector
+            vector<Album> albums = artists[found_loc].albums;
 
-                //check for album match
-                if(cmpA.name == clean_up(album, '_')){
-                    cout << "new song" << endl;
-                    same_album = true; //turn on flag so if wont run
-                    //update album info
-                    cmpA.time+=new_time;
-                    cmpA.nsongs++;
-                    songs = cmpA.songs;
-                    songs[track] = new_song;
+            //see if songs album exists or not
+            for(al_itr = albums.begin(); al_itr!= albums.end(); al_itr++){
+                Album tmp_al = *al_itr;
+                if(tmp_al.name == album){
+                    album_found = true;
+                    aloc = x;
                 }
-                else{
-                    new_art = cmp; //store for new album entry
-                }  
+                x++;   
+            }
+            //if album exists
+            if(album_found){
+                cout << "album found" << endl;
+                artists[found_loc].albums[aloc].time+=new_time;
+                artists[found_loc].albums[aloc].nsongs++;
+                artists[found_loc].albums[aloc].songs[track] = new_song;   
+            }
+            else{
+                //if album does not exist
+                Album new_album;
+                new_album.name = album;
+                new_album.artist = artist;
+                new_album.genre = clean_up(genre, '_');
+                new_album.time = new_time;
+                new_album.nsongs++;
+                new_album.songs[track] = new_song;  
+                artists[found_loc].albums.push_back(new_album);          
+
             }
         }
-
-        //creates a new entry if it is a new album and artist already exists
-        if(!same_album && exists){
-            cout << "same artist, new album" << endl;
-            //create new album, same artist
-            Album new_album;
-            new_album.name = clean_up(album, '_');
-            new_album.genre = clean_up(album, '_');
-            new_album.time+=new_time;
-            songs = new_album.songs;
-            songs[track] = new_song;
-            records.insert({new_art, new_album});
-
-        }
-
-        //create a new entry
-        if(!exists){
-            cout << "new artist" << endl;
-            //update artist info
-            new_art.time+=new_time;
-            new_art.nsongs++;
-
-            //create album
-            Album new_album;
-            new_album.name = clean_up(album, '_');
-            new_album.genre = clean_up(album, '_');
-            new_album.time+=new_time;
-            songs = new_album.songs;
-            songs[track] = new_song;
-            records.insert({new_art, new_album});
-        }    
+        else{
+            //create new artist and album in artist
+            Artist new_artist;
+            new_artist.name = artist;
+            new_artist.time+=new_time;
+            new_artist.nsongs++;
             
-    }          
-  
-    Artist artist_obj;
+            Album new_album;
+            new_album.name=album;
+            new_album.artist = artist;
+            new_album.genre = clean_up(genre, '_');
+            new_album.time+=new_time;
+            new_album.nsongs++;
+            new_album.songs[track] = new_song;     
 
-    for(it = records.begin(); it!= records.end(); it++){
-        artist_obj = it -> first;
-        cout << artist_obj.name << endl;
-    } 
+            //add album to artist, and artist to artists vector
+            new_artist.albums.push_back(new_album);
+            artists.push_back(new_artist);
+        } 
+    }
+
+    //print out records   
+    for(ar_itr = artists.begin(); ar_itr != artists.end(); ar_itr++){
+        Artist pArt = *ar_itr;
+        cout << pArt.name << ": " << pArt.nsongs << ", " << pArt.time << endl;
+        cout << "\t";
+        vector<Album> pAlb = pArt.albums;
+        for(al_itr = pAlb.begin(); al_itr != pAlb.end(); al_itr++){
+            Album out = *al_itr;
+            cout << out.name << ": " << out.nsongs << ", " << out.time << endl;
+            map <int, Song>:: iterator it;
+            for(it = out.songs.begin(); it != out.songs.end(); it++){
+                cout << "\t \t";
+                Song pSong = it -> second;
+                cout << pSong << endl;
+            }
+        }
+    }
+
 
     return 0;
 }
@@ -164,4 +190,16 @@ string clean_up(string str, char delim){
 }
 
 
+
+
+
+
+/*vector<Artist>:: iterator ar_it;
+            for(ar_it = artists.begin(); ar_it!=artists.end(); ar_it++){
+                Artist tmp = *ar_it;
+                if(tmp.name > new_artist.name){
+                    //probs need a if it reaches the end, just pushback
+                    artists.insert(ar_it, new_artist);
+                    break;
+                }*/
 
