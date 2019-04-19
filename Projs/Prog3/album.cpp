@@ -1,5 +1,5 @@
 #include "album.h"
-
+#include <iostream>
 string Album::getUPC(){
     return string(UPC);
 }
@@ -50,5 +50,11 @@ ostream & operator << (ostream & stream, Album & C){
 }
 
 istream & operator >> (istream & stream, Album & C){
-    stream >> C.UPC >> C.Artist >> C.Title;
+    string upc, artist, title;
+    getline(stream, upc);
+    getline(stream, artist);
+    getline(stream, title);
+    strcpy(C.UPC, upc.c_str());
+    strcpy(C.Artist, artist.c_str());
+    strcpy(C.Title, title.c_str());
 }

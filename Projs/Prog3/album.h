@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 const int UpTo = 50;

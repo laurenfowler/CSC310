@@ -1,34 +1,17 @@
 #include <iostream>
+#include <fstream>
 #include "album.h"
+#include "btree.h"
+#include <string>
 
-int main(){
+int main(int argc, char *argv[]){
 
-    String UPC = "11115";
-    String name = "Starry Nights";
-    String artist = "Van Gough";
-    Album album(UPC, artist, name);
-    Album empty;
-    Album test(album);
+    BTree test; 
 
-    String UPC1 = "11114";
-    String name1 = "Sunflower";
-    String artist1 = "post malone";
+    //test reset function
+    test.reset(argv[2]);
+    test.writeHeader(argv[2]);
 
-    Album comp(UPC1, artist1, name1);
-
-    cout << album.getUPC() << " " << album.getTitle() << " " << album.getArtist() << endl;
-    cout << empty.getUPC() << " " << empty.getTitle() << " " << empty.getArtist() << endl;
-    cout << test.getUPC() << " " << test.getTitle() << " " << test.getArtist() << endl;
-    
-    empty = test;
-    cout << empty.getUPC() << " " << empty.getTitle() << " " << empty.getArtist() << endl;
-
-    cout << (album < comp) << endl;
-    cout << (comp < album) << endl;
-
-    cout << album << endl;
 
 
 }
-
-
