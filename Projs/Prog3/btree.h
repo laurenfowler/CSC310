@@ -20,7 +20,8 @@ typedef keyType ValueArray[ORDER-1];
 
 struct BTNode
 {
-        int currSize;
+        int num_children = 0;
+        int currSize = 0;
         ValueArray contents;
         IndexArray child;
 }; 
@@ -38,7 +39,7 @@ class BTree
 {
  public:
 	BTree();
-	void writeHeader (char * fileName);
+	void writeHeader(char * fileName);
 	void insert (keyType key);
 	void reset (char * filename);
 	void close ();
@@ -65,7 +66,7 @@ class BTree
 
 	int findAddr (keyType key, BTNode t, int tAddr);
 	int findpAddr(keyType key, BTNode t, int tAddr);
-	void insert (keyType key, int recAddr, int oneAddr, int twoAddr);
+	void insert (keyType key, int recAddr); //, int oneAddr, int twoAddr);
     BTNode getNode (int recAddr);
 	void printNode(int recAddr);
     void placeNode (keyType k,int recAddr,int oneAddr,int twoAddr);
@@ -73,7 +74,7 @@ class BTree
 	bool isLeaf(BTNode t);
 	int countLeaves(int recAddr);
     void adjRoot (keyType rootElem, int oneAddr, int twoAddr);
-    void splitNode (keyType& key,int recAddr,int& oneAddr,int& twoAddr);
+    void splitNode (keyType& key,int recAddr); //,int& oneAddr,int& twoAddr);
 	bool search (string key, BTNode t, int tAddr);
 	
 };

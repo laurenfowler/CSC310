@@ -42,11 +42,14 @@ Album & Album::operator = (const Album& otherAlbum){
 }
 
 bool operator < (const Album& a, const Album& b){
-    return a.UPC < b.UPC; 
+    if(strcmp(a.UPC, b.UPC) < 0){
+        return true;
+    }
+    return false;
 }
 
 ostream & operator << (ostream & stream, Album & C){
-    stream << C.UPC << " " << C.Artist << " " << C.Title;
+    stream << C.UPC << "|" << C.Artist << "|" << C.Title << "|";
 }
 
 istream & operator >> (istream & stream, Album & C){
