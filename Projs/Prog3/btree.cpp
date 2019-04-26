@@ -41,7 +41,7 @@
     }
 
     void BTree::insert(keyType key){
-        cout << "Now inserting " << key << endl;
+        //cout << "Now inserting " << key << endl;
         insert(key, rootAddr);
  
     }
@@ -127,38 +127,86 @@
     }
 
     void BTree:: insert(keyType key, int recAddr){ //,int oneAddr, int twoAddr){
-        int c = 0;
+        int nAddr;
         BTNode node = getNode(recAddr); //get node trying to insert into
         bool leaf = isLeaf(node);
 
-        while(!leaf){
-            //compare record trying to store
-            //find child under record greater than one we are trying to insert  
-            //keep going down until leaf is found
-            //update rec address as we go
-        }
-        
-        //if we got here, node is a leaf
-        if(node.currSize == 4){
-            cout << "houston we have a split" << endl;
-            //insert key like normal
-            splitNode(key, recAddr);
-        }
-        else{
-            //insert node
-            node.currSize++; //increment size of the node 
-            cout << "houston we inserting a key in this bitch" << endl; 
-            node.contents[node.currSize-1] = key; //at this moment it is not ordered, I can put it in a set later when needed to order
+        if(leaf && node.currSize < 4){
+            //insert the key
 
-           //will be the recAddr of the node
-           //write out updated node to file
-           treeFile.seekp(recAddr, ios::beg);
-           treeFile.write((char *) &node, sizeof(BTNode));
-           treeFile.clear();
-           //cout << "current node size " <<  node.currSize << endl;
+            if(node.currSize == 0){
+                node.contents[0] = key;
+                cout << "key " << key << " inserted at " << 0 << endl;
+            }
+            else{
+                cout << "node.currSize = " << node.currSize << endl;
+                int i = node.currSize-1; 
+                keyType cmp = node.contents[i];
+                cout << "contents at " << i << " " << cmp << endl;
+                
+                while(i>=0){
+                    cout << "in while loop" << endl;
+                    cout << "comparing key " << key << endl;
+                    cout << "with          " << cmp << endl;    
+                    if(key < cmp){
+                        cout << "placing cmp in " << i+1 << endl;
+                        node.contents[i+1] = cmp;
+                    }
+                    else{
+                        //insert key at sorted loc
+                        //node.contents[i+1] = key;
+                        //cout << "key " << key << " inserted at " << i+1 << endl; 
+                        //cout << "breaking out of loop" << endl;
+                        break;
+                    }
+                    
+                    i--;
+                    cmp = node.contents[i];
+                }       
+                //insert key at sorted loc
+                node.contents[i+1] = key;
+                cout << "key " << key << " inserted at " << i+1 << endl; 
+            }
+
+            cout << "sorted" << endl;
+            for(int i=0; i<node.currSize+1; i++){
+                cout << node.contents[i] << endl;
+            }
+
+            //increment currSize after succefully inserting
+            node.currSize++;
+
+            //write out updated node
+            treeFile.seekp(recAddr, ios::beg);
+            treeFile.write((char *) &node, sizeof(BTNode));
+            treeFile.clear();
+            return;
+        } 
+
+        if(leaf && node.currSize == 4){
+           // cout << "houston we have a split" << endl;
+           // splitNode(key, recAddr);
+            return;
         }
 
+        int x = 0;
+        //if it's not a leaf
+        if(!leaf){
+            //search for child branch to go to
+            while(key < node.contents[x]){
+                x++;
+            }
+            nAddr = node.child[x];
+            insert(key, nAddr); //here is the recursion
+
+
+            //???come back with the place to insert new key if split address does not equal -1
+
+            return;
+        }
     }
+
+
 
     BTNode BTree:: getNode(int recAddr){
        treeFile.seekg(recAddr, ios::beg); //seek from beginning
@@ -206,22 +254,17 @@
 
     void BTree:: splitNode(keyType& key, int recAddr){ //, int& oneAddr, int& twoAddr){
         cout << "in split node" << endl;
-        BTNode node = getNode(recAddr);
+        BTNode node = getNode(recAddr); //get full node
 
         //create set
-        //set <int> nodeSet;
         set <keyType> nodeSet;
-        //set <int> :: iterator it;
         set <keyType> :: iterator it;
 
         nodeSet.insert(key);
         for(int i=0; i<node.currSize; i++){
-            //insert UPC code for each album into set
-            //nodeSet.insert((stoi(node.contents[i].getUPC())));
+            //insert album into set to be ordered
             nodeSet.insert(node.contents[i]);
         }
-
-        //get middle and remove
 
     }
 
