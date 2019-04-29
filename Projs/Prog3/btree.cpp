@@ -41,7 +41,7 @@
     }
 
     void BTree::insert(keyType key){
-        //cout << "Now inserting " << key << endl;
+        cout << "Now inserting " << key << endl;
         insert(key, rootAddr);
  
     }
@@ -95,15 +95,18 @@
 //private functions
 
     void BTree:: printTree(int recAddr){
+        //cout << recAddr << endl;
         //if its a leaf print it
         if(isLeaf(recAddr)){
             BTNode dummy = getNode(recAddr);
+            //cout << "node is a leaf" << endl;
             printNode(recAddr);
         }
         //if its not a leaf, print it and go through its chilluns
         else{
             BTNode dummy = getNode(recAddr);
             printNode(recAddr);
+            //cout << dummy.num_children << endl;
             for(int i=0; i <= dummy.currSize; i++){
                 printTree(dummy.child[i]);
             }
@@ -134,44 +137,38 @@
         if(leaf && node.currSize < 4){
             //insert the key
 
+            //if node is empty, insert key in first slot
             if(node.currSize == 0){
                 node.contents[0] = key;
-                cout << "key " << key << " inserted at " << 0 << endl;
             }
             else{
-                cout << "node.currSize = " << node.currSize << endl;
                 int i = node.currSize-1; 
                 keyType cmp = node.contents[i];
-                cout << "contents at " << i << " " << cmp << endl;
-                
+               
+                //compare each key from right to left 
                 while(i>=0){
-                    cout << "in while loop" << endl;
-                    cout << "comparing key " << key << endl;
-                    cout << "with          " << cmp << endl;    
+                    //if key is less than cmp, move cmp to i+1
                     if(key < cmp){
-                        cout << "placing cmp in " << i+1 << endl;
                         node.contents[i+1] = cmp;
                     }
                     else{
-                        //insert key at sorted loc
-                        //node.contents[i+1] = key;
-                        //cout << "key " << key << " inserted at " << i+1 << endl; 
-                        //cout << "breaking out of loop" << endl;
+                        //key is greater than cmp at i
+                        //key needs to be inserted at i+1
                         break;
                     }
-                    
+                    //decrement i and get next cmp
                     i--;
                     cmp = node.contents[i];
                 }       
+
                 //insert key at sorted loc
                 node.contents[i+1] = key;
-                cout << "key " << key << " inserted at " << i+1 << endl; 
             }
 
-            cout << "sorted" << endl;
+            /*cout << "sorted" << endl;
             for(int i=0; i<node.currSize+1; i++){
                 cout << node.contents[i] << endl;
-            }
+            }*/
 
             //increment currSize after succefully inserting
             node.currSize++;
@@ -184,8 +181,8 @@
         } 
 
         if(leaf && node.currSize == 4){
-           // cout << "houston we have a split" << endl;
-           // splitNode(key, recAddr);
+            //cout << "houston we have a split" << endl;
+            splitNode(key, recAddr);
             return;
         }
 
@@ -253,10 +250,11 @@
     }
 
     void BTree:: splitNode(keyType& key, int recAddr){ //, int& oneAddr, int& twoAddr){
-        cout << "in split node" << endl;
+        cout << "Splitting" << endl;
         BTNode node = getNode(recAddr); //get full node
+        BTNode newLeft, newRight;
 
-        //create set
+        //create set to get middle key
         set <keyType> nodeSet;
         set <keyType> :: iterator it;
 
@@ -265,7 +263,68 @@
             //insert album into set to be ordered
             nodeSet.insert(node.contents[i]);
         }
+    
+        if(height == 0){
+            //create new root
+            BTNode newRoot;
+            
+            //start iterator it at begining again
+            it = nodeSet.begin();
+            
+            //new left gets recAddr
+            newLeft.currSize = 2;
+            newLeft.num_children = 0;
+            newLeft.contents[0] = *it;
+            advance(it,1);
+            newLeft.contents[1] = *it;           
 
+            advance(it, 1); //get middle
+
+            newRoot.num_children = 2;
+            newRoot.currSize = 1;
+            newRoot.contents[0] = *it;
+ 
+            newRight.num_children = 0;
+            newRight.currSize = 2;
+            advance(it, 1); 
+            newRight.contents[0] = *it;
+            advance(it, 1);
+            newRight.contents[1] = *it;
+
+            //write out left child
+            treeFile.seekg(recAddr, ios::beg);
+            //cout << "first child: " << treeFile.tellp() << endl;
+            treeFile.write((char *) &newLeft, sizeof(BTNode));
+            treeFile.clear();
+
+            //cout << "second child: " << treeFile.tellp() << endl;
+
+            newRoot.child[0] = recAddr;
+            newRoot.child[1] = treeFile.tellp();
+          
+            treeFile.write((char *) &newRight, sizeof(BTNode));
+
+            //cout << "root: " << treeFile.tellp() << endl;;
+            rootAddr = treeFile.tellp();
+
+            //update dummy
+            BTNode dummy = getNode(0);
+            dummy.child[0] = rootAddr;
+            //cout << "dummy.child[0] == " << dummy.child[0] << endl;
+
+            //write dummy
+            treeFile.seekg(0, ios::beg);
+            treeFile.write((char *) &dummy, sizeof(BTNode));
+            treeFile.clear();
+
+            //write root
+            treeFile.seekp(rootAddr, ios::beg);
+            treeFile.write((char *) &newRoot, sizeof(BTNode));
+            treeFile.clear();
+
+            //increment tree height
+            height++;
+        }    
     }
 
     bool BTree:: search(string key, BTNode t, int tAddr){
