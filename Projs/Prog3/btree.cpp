@@ -42,7 +42,7 @@
 
     void BTree::insert(keyType key){
         cout << "Now inserting " << key << endl;
-        insert(key, rootAddr);
+        insert(key, rootAddr, -1, -1);
  
     }
 
@@ -129,12 +129,76 @@
 
     }
 
-    void BTree:: insert(keyType key, int recAddr){ //,int oneAddr, int twoAddr){
+    //oneAddr is parent address
+    void BTree:: insert(keyType key, int recAddr, int oneAddr, int twoAddr){
         int nAddr;
         BTNode node = getNode(recAddr); //get node trying to insert into
         bool leaf = isLeaf(node);
 
-        if(leaf && node.currSize < 4){
+         //int x = 0;
+        //if it's not a leaf
+        if(!leaf){
+            int x = node.currSize;
+            //search for child branch to go to
+            for(x =node.currSize-1; x > -1; x--){
+                //when key is greater than key compared to, go to that
+                //if it never reaches this statement, key goes to 0
+                if(!(key < node.contents[x])){
+                    break;
+                }
+            }
+           
+            nAddr = node.child[x+1];
+            insert(key, nAddr, recAddr, twoAddr); //here is the recursion
+
+            return;
+        }
+
+         if(leaf && node.currSize == 4){
+            //cout << "houston we have a split" << endl;
+            int childAddr;
+            splitNode(key, recAddr, oneAddr, childAddr);
+           
+            //get parent
+            node = getNode(oneAddr);
+            
+            int i = node.currSize-1; 
+                keyType cmp = node.contents[i];
+               
+                //compare each key from right to left 
+                while(i>=0){
+                    //if key is less than cmp, move cmp to i+1
+                    if(key < cmp){
+                        node.contents[i+1] = cmp;
+                        node.child[i] = node.child[i+1];
+                    }
+                    else{
+                        //key is greater than cmp at i
+                        //key needs to be inserted at i+1
+                        break;
+                    }
+                    //decrement i and get next cmp
+                    i--;
+                    cmp = node.contents[i];
+                }       
+                cout << i << endl;
+                //insert key at sorted loc
+                node.contents[i+1] = key;
+                node.child[i] = recAddr;
+                node.child[i+1] = childAddr;
+
+
+            //increment currSize after succefully inserting
+            node.currSize++;
+
+            //write out updated node
+            treeFile.seekp(oneAddr, ios::beg);
+            treeFile.write((char *) &node, sizeof(BTNode));
+            treeFile.clear();
+            return;
+        }
+
+         if(leaf && node.currSize < 4){
             //insert the key
 
             //if node is empty, insert key in first slot
@@ -180,27 +244,6 @@
             return;
         } 
 
-        if(leaf && node.currSize == 4){
-            //cout << "houston we have a split" << endl;
-            splitNode(key, recAddr);
-            return;
-        }
-
-        int x = 0;
-        //if it's not a leaf
-        if(!leaf){
-            //search for child branch to go to
-            while(key < node.contents[x]){
-                x++;
-            }
-            nAddr = node.child[x];
-            insert(key, nAddr); //here is the recursion
-
-
-            //???come back with the place to insert new key if split address does not equal -1
-
-            return;
-        }
     }
 
 
@@ -249,7 +292,7 @@
 
     }
 
-    void BTree:: splitNode(keyType& key, int recAddr){ //, int& oneAddr, int& twoAddr){
+    void BTree:: splitNode(keyType& key, int recAddr, int& oneAddr, int& twoAddr){
         cout << "Splitting" << endl;
         BTNode node = getNode(recAddr); //get full node
         BTNode newLeft, newRight;
@@ -265,6 +308,7 @@
         }
     
         if(height == 0){
+            oneAddr = -1;
             //create new root
             BTNode newRoot;
             
@@ -324,7 +368,40 @@
 
             //increment tree height
             height++;
-        }    
+        }
+        else{
+            //create left and right 
+            it = nodeSet.begin();
+            newLeft.currSize = 2;
+            newLeft.num_children = 0;
+            newLeft.contents[0] = *it;
+            advance(it,1);
+            newLeft.contents[1] = *it;           
+
+
+            advance(it, 1); //get middle
+            key = *it; //middle key       
+
+            newRight.num_children = 0;
+            newRight.currSize = 2;
+            advance(it, 1); 
+            newRight.contents[0] = *it;
+            advance(it, 1);
+            newRight.contents[1] = *it;
+
+            //write out new left and right to end of file
+            treeFile.seekg(recAddr, ios::beg);
+            //get address of new left child, sent back to insert
+            treeFile.write((char *) &newLeft, sizeof(BTNode));
+            treeFile.seekg(0, ios::end);
+            twoAddr = treeFile.tellp();    
+            cout << twoAddr << endl;
+            //write out newRight
+            treeFile.write((char *) &newRight, sizeof(BTNode));   
+
+        }
+
+    
     }
 
     bool BTree:: search(string key, BTNode t, int tAddr){
